@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRAFALGAR | Enterprise Defense Matrix</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- BEIGE & MAROON PALETTE --- */
+        :root {
+            --bg-main: #EAE3D9;      
+            --surface: #F4EFE6;      
+            --surface-dark: #D9CEBE; 
+            --maroon: #6B1D2F;       
+            --maroon-light: #9B334A; 
+            --text-main: #2D1B1E;    
+            --text-muted: #7A686B;
+            --warn: #B87D36;         
+            --err: #A32A29;          
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            padding: 2rem;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Typography */
+        h1, h2, h3 { font-weight: 800; color: var(--maroon); }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Layout */
+        .container { max-width: 1400px; margin: 0 auto; position: relative; z-index: 10; }
+        .header { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; }
+        @media (min-width: 768px) {
+            .header { flex-direction: row; justify-content: space-between; align-items: center; }
+        }
+        
+        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 1024px) { .dashboard-grid { grid-template-columns: 2fr 1fr; } }
+        
+        .grid { display: grid; gap: 1.5rem; }
+        @media (min-width: 768px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+        
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mt-4 { margin-top: 1rem; }
+        
+        /* Background Ambient Glows */
+        .glow-1 {
+            position: fixed; top: -10%; left: -10%; width: 40%; height: 40%;
+            background: var(--maroon); border-radius: 50%; filter: blur(180px); opacity: 0.08;
+            pointer-events: none; z-index: 1;
+        }
+        .glow-2 {
+            position: fixed; bottom: -10%; right: -10%; width: 30%; height: 30%;
+            background: var(--maroon); border-radius: 50%; filter: blur(150px); opacity: 0.05;
+            pointer-events: none; z-index: 1;
+        }
+
+        /* --- CLAYMORPHISM DESIGN SYSTEM --- */
+        .clay-card {
+            background: var(--surface);
+            border-radius: 28px;
+            padding: 1.5rem;
+            box-shadow: 
+                inset 6px 6px 12px rgba(255, 255, 255, 0.8),
+                inset -6px -6px 12px rgba(217, 206, 190, 0.6),
+                12px 12px 24px rgba(217, 206, 190, 0.8),
+                -6px -6px 16px rgba(255, 255, 255, 0.9);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .clay-button {
+            background: var(--surface);
+            border-radius: 16px;
+            border: none;
+            color: var(--maroon);
+            padding: 0.5rem 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.85rem;
+            box-shadow: 
+                inset 3px 3px 6px rgba(255, 255, 255, 0.8),
+                inset -3px -3px 6px rgba(217, 206, 190, 0.6),
+                4px 4px 8px rgba(217, 206, 190, 0.8),
+                -2px -2px 5px rgba(255, 255, 255, 0.8);
+            transition: all 0.15s ease;
+        }
+
+        .clay-button:active {
+            box-shadow: 
+                inset 4px 4px 8px rgba(217, 206, 190, 0.8),
+                inset -2px -2px 5px rgba(255, 255, 255, 0.4);
+            transform: scale(0.97);
+        }
+
+        .clay-button-primary {
+            background: linear-gradient(145deg, var(--maroon-light), var(--maroon));
+            color: var(--surface);
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 20px;
+            box-shadow: 
+                inset 3px 3px 6px rgba(255, 255, 255, 0.3),
+                inset -3px -3px 6px rgba(0, 0, 0, 0.4),
+                6px 6px 15px rgba(107, 29, 47, 0.3);
+        }
+
+        .clay-toggle {
+            width: 56px; height: 32px; border-radius: 50px; border: none; cursor: pointer;
+            position: relative; transition: background-color 0.3s, box-shadow 0.3s;
+            box-shadow: inset 3px 3px 6px rgba(217, 206, 190, 0.8), inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+        }
+        .clay-toggle.active { background: var(--maroon); }
+        .clay-toggle.inactive { background: var(--surface-dark); }
+        
+        .clay-toggle-thumb {
+            width: 24px; height: 24px; border-radius: 50%; position: absolute; top: 4px;
+            transition: transform 0.3s, background-color 0.3s;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2), -1px -1px 3px rgba(255,255,255,0.8);
+        }
+        .clay-toggle.active .clay-toggle-thumb { transform: translateX(24px); background: var(--surface); }
+        .clay-toggle.inactive .clay-toggle-thumb { transform: translateX(4px); background: #fff; }
+
+        /* Form Inputs */
+        .clay-input {
+            background: var(--bg-main); border: none; padding: 0.75rem 1rem; border-radius: 12px;
+            font-family: 'Inter', sans-serif; font-weight: 600; color: var(--maroon);
+            box-shadow: inset 3px 3px 6px rgba(217, 206, 190, 0.8), inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+            outline: none; width: 100%;
+        }
+        select.clay-input { cursor: pointer; }
+
+        /* Utilities */
+        .text-maroon { color: var(--maroon); }
+        .text-warn { color: var(--warn); }
+        .text-err { color: var(--err); }
+        .text-gray { color: var(--text-muted); }
+        .text-sm { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+        .uppercase { text-transform: uppercase; letter-spacing: 0.05em; }
+        .hidden { display: none !important; }
+        .w-full { width: 100%; }
+        
+        /* Badges */
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+        .badge-active { background: rgba(107, 29, 47, 0.1); color: var(--maroon); border: 1px solid rgba(107, 29, 47, 0.2); }
+        .badge-warn { background: rgba(184, 125, 54, 0.1); color: var(--warn); border: 1px solid rgba(184, 125, 54, 0.2); }
+        .badge-err { background: rgba(163, 42, 41, 0.1); color: var(--err); border: 1px solid rgba(163, 42, 41, 0.2); }
+
+        /* Status Indicator */
+        .live-dot {
+            width: 12px; height: 12px; border-radius: 50%; background: var(--maroon);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--maroon); }
+            50% { opacity: 0.5; box-shadow: 0 0 5px var(--maroon); }
+        }
+        .text-glow { text-shadow: 0 0 15px rgba(107, 29, 47, 0.2); }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap;}
+        .tab-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600; padding: 0.75rem 1.25rem; border-radius: 16px; transition: all 0.2s;}
+        .tab-btn.active { 
+            color: var(--maroon); 
+            background: var(--surface);
+            box-shadow: inset 2px 2px 5px rgba(217, 206, 190, 0.8), inset -2px -2px 5px rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Logs & Feeds */
+        .log-container { height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; padding-right: 0.5rem;}
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--surface-dark); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--maroon-light); }
+        
+        .log-entry { border-bottom: 1px solid rgba(217, 206, 190, 0.4); padding-bottom: 0.75rem; font-weight: 600; font-size: 0.85rem;}
+        .log-entry:last-child { border-bottom: none; }
+
+        /* Lists / Tables */
+        .list-row { display: flex; flex-direction: column; gap: 1rem; padding: 1rem; background: var(--bg-main); border-radius: 16px; margin-bottom: 0.75rem; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.03); transition: all 0.2s; }
+        @media (min-width: 768px) { .list-row { flex-direction: row; justify-content: space-between; align-items: center; } }
+
+        /* Progress Bars */
+        .progress-track { width: 100%; background: var(--surface-dark); height: 8px; border-radius: 10px; overflow: hidden; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1); }
+        .progress-fill { height: 100%; border-radius: 10px; transition: width 0.3s ease, background-color 0.3s; }
+
+        /* Dynamic Stat Rings */
+        .stat-ring { position: relative; width: 90px; height: 90px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 1.5rem; color: var(--maroon); box-shadow: inset 4px 4px 8px rgba(217, 206, 190, 0.8), inset -4px -4px 8px rgba(255, 255, 255, 0.8); }
+        
+        /* Live Ticker */
+        .ticker-wrap { width: 100%; overflow: hidden; background: var(--surface-dark); padding: 0.5rem 1rem; border-radius: 12px; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1); }
+        .ticker { display: inline-block; white-space: nowrap; animation: ticker 20s linear infinite; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; color: var(--maroon); }
+        @keyframes ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+
+        /* --- FIXED TELEMETRY GRAPH STYLES --- */
+        .telemetry-chart-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 3px;
+            height: 100px;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            padding-bottom: 2px;
+        }
+        .telemetry-bar {
+            flex: 1;
+            min-width: 4px;
+            max-width: 12px;
+            background: var(--maroon-light);
+            border-radius: 4px 4px 0 0;
+            /* Smooth transition creates the 'living graph' effect */
+            transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+            box-shadow: inset 1px 1px 2px rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glow-1"></div>
+    <div class="glow-2"></div>
+
+    <div class="container">
+        
+        <!-- Header -->
+        <header class="header">
+            <div>
+                <h1 style="font-size: 2.5rem; letter-spacing: -1px;" class="text-glow">TRAFALGAR</h1>
+                <div class="flex items-center gap-3 mt-1">
+                    <p class="text-maroon mono text-xs uppercase tracking-wider">Enterprise Defense Matrix v12.0</p>
+                </div>
+            </div>
+            
+            <div class="flex gap-3">
+                <div class="ticker-wrap" style="max-width: 400px;">
+                    <div class="ticker" id="live-ticker">DEFCON 5 // ALL SYSTEMS NOMINAL // CANARY TOKENS ACTIVE // DLP SCANNING // ZERO TRUST ENFORCED //</div>
+                </div>
+                <div class="clay-card flex items-center gap-3" style="padding: 0.75rem 1.25rem;">
+                    <div class="live-dot"></div>
+                    <span class="text-sm font-bold text-maroon">Live</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active">Overview</button>
+            <button onclick="switchTab('lifecycle')" id="tab-lifecycle" class="tab-btn">Identity</button>
+            <button onclick="switchTab('endpoints')" id="tab-endpoints" class="tab-btn">Endpoints</button>
+            <button onclick="switchTab('insider')" id="tab-insider" class="tab-btn">Insider Threat</button>
+            <button onclick="switchTab('supply')" id="tab-supply" class="tab-btn">Supply Chain</button>
+            <button onclick="switchTab('crypto')" id="tab-crypto" class="tab-btn">Crypto & SOAR</button>
+            <button onclick="switchTab('governance')" id="tab-governance" class="tab-btn">Governance</button>
+            <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn">Audit Logs</button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main>
+
+            <!-- DASHBOARD TAB -->
+            <section id="content-dashboard" class="dashboard-grid">
+                <div class="flex-col gap-4" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    
+                    <!-- Top Stat Rings -->
+                    <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="clay-card flex flex-col items-center justify-center">
+                            <h2 class="text-gray text-xs uppercase mb-2">Cloud Health</h2>
+                            <div class="stat-ring" id="ring-cloud">99%</div>
+                        </div>
+                        <div class="clay-card flex flex-col items-center justify-center">
+                            <h2 class="text-gray text-xs uppercase mb-2">Endpoint Trust</h2>
+                            <div class="stat-ring text-warn" id="ring-endpoint">75%</div>
+                        </div>
+                        <div class="clay-card flex flex-col items-center justify-center">
+                            <h2 class="text-gray text-xs uppercase mb-2">Data Integrity</h2>
+                            <div class="stat-ring" id="ring-identity">100%</div>
+                        </div>
+                    </div>
+
+                    <!-- Live Telemetry -->
+                    <div class="clay-card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-sm uppercase">Live Network Traffic</h2>
+                            <span class="text-xs text-maroon mono font-bold">Real-Time</span>
+                        </div>
+                        <div class="telemetry-chart-container" id="telemetry-bars">
+                            <!-- Bars will be dynamically managed by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="clay-card">
+                        <h2 class="text-sm uppercase mb-4">Global Actions</h2>
+                        <div class="flex gap-3" style="flex-wrap: wrap;">
+                            <button onclick="addLog('SYSTEM: Triggered global cloud audit.', 'text-maroon')" class="clay-button clay-button-primary">Run Cloud Audit</button>
+                            <button onclick="addLog('SECURITY: SOAR Playbook executed. All sessions revoked.', 'text-maroon')" class="clay-button">Execute SOAR</button>
+                            <button onclick="addLog('SECURITY: GLOBAL LOCKDOWN ENGAGED.', 'text-err')" class="clay-button text-err">Global Lockdown</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Activity Feed -->
+                <div class="clay-card" style="display: flex; flex-direction: column; height: 100%; max-height: 500px;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-sm uppercase">Live Activity Feed</h2>
+                        <div class="live-dot" style="width: 8px; height: 8px;"></div>
+                    </div>
+                    <div class="log-container" id="dashboard-feed" style="flex: 1;"></div>
+                </div>
+            </section>
+
+            <!-- IDENTITY TAB -->
+            <section id="content-lifecycle" class="hidden grid">
+                <div class="clay-card" style="grid-column: 1 / -1;">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                        <h2>Employee Directory (SCIM Synced)</h2>
+                        <button onclick="provisionUser()" class="clay-button clay-button-primary">+ Provision Employee</button>
+                    </div>
+                    <div id="user-list"></div>
+                </div>
+            </section>
+
+            <!-- ENDPOINTS TAB -->
+            <section id="content-endpoints" class="hidden grid">
+                <div class="clay-card" style="grid-column: 1 / -1;">
+                    <h2 class="mb-4">Employee PC Telemetry & Posture</h2>
+                    <div id="endpoint-list"></div>
+                </div>
+            </section>
+
+            <!-- INSIDER THREAT TAB -->
+            <section id="content-insider" class="hidden grid">
+                <div class="clay-card">
+                    <h2 class="mb-4">Data Exfiltration Defenses</h2>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-maroon">Dynamic Watermarking</p>
+                                <p class="text-xs text-gray">Embed invisible user IDs on download</p>
+                            </div>
+                            <button onclick="toggleFeature(this, 'Dynamic Watermarking')" class="clay-toggle active"><div class="clay-toggle-thumb"></div></button>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-maroon">Clipboard Restrictions</p>
+                                <p class="text-xs text-gray">Block copy-paste of sensitive data</p>
+                            </div>
+                            <button onclick="toggleFeature(this, 'Clipboard Restrictions')" class="clay-toggle active"><div class="clay-toggle-thumb"></div></button>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-maroon">Geofencing</p>
+                                <p class="text-xs text-gray">Block access from high-risk countries</p>
+                            </div>
+                            <button onclick="toggleFeature(this, 'Geofencing')" class="clay-toggle active"><div class="clay-toggle-thumb"></div></button>
+                        </div>
+                        <button onclick="simulateInsiderThreat()" class="clay-button text-err w-full" style="margin-top: 1rem;">Simulate Geofence Breach</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SUPPLY CHAIN TAB -->
+            <section id="content-supply" class="hidden grid">
+                <div class="clay-card">
+                    <h2 class="mb-4">Third-Party & Supply Chain</h2>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-maroon">Secure External Portals</p>
+                                <p class="text-xs text-gray">Expiring, view-only links for vendors</p>
+                            </div>
+                            <button onclick="toggleFeature(this, 'External Portals')" class="clay-toggle active"><div class="clay-toggle-thumb"></div></button>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-maroon">Malware Sandboxing (CDR)</p>
+                                <p class="text-xs text-gray">Strip macros/scripts from uploads</p>
+                            </div>
+                            <button onclick="toggleFeature(this, 'CDR Sandboxing')" class="clay-toggle active"><div class="clay-toggle-thumb"></div></button>
+                        </div>
+                        <button onclick="simulateCdrScan()" class="clay-button w-full mt-4 text-warn">Test Malicious PDF Upload</button>
+                    </div>
+                </div>
+
+                <div class="clay-card">
+                    <h2 class="mb-4">Automated Incident Response (SOAR)</h2>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-maroon">Orchestrated Playbooks</p>
+                                <p class="text-xs text-gray">Auto-revoke tokens on "Impossible Travel"</p>
+                            </div>
+                            <button onclick="toggleFeature(this, 'SOAR Playbooks')" class="clay-toggle active"><div class="clay-toggle-thumb"></div></button>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-maroon">Deception Technology</p>
+                                <p class="text-xs text-gray">Deploy Canary files in shared drives</p>
+                            </div>
+                            <button onclick="toggleFeature(this, 'Canary Tokens')" class="clay-toggle active"><div class="clay-toggle-thumb"></div></button>
+                        </div>
+                        <button onclick="simulateCanaryTrigger()" class="clay-button text-err w-full mt-4">Trigger Canary File</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CRYPTO TAB -->
+            <section id="content-crypto" class="hidden grid">
+                <div class="clay-card">
+                    <h2 class="mb-4">Key Governance (BYOK/HYOK)</h2>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-maroon">Bring Your Own Key (BYOK)</p>
+                                <p class="text-xs text-gray">Client-managed AWS KMS keys</p>
+                            </div>
+                            <button onclick="toggleFeature(this, 'BYOK')" class="clay-toggle active"><div class="clay-toggle-thumb"></div></button>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-maroon">Hold Your Own Key (HYOK)</p>
+                                <p class="text-xs text-gray">Keys held in external HSM</p>
+                            </div>
+                            <button onclick="toggleFeature(this, 'HYOK')" class="clay-toggle active"><div class="clay-toggle-thumb"></div></button>
+                        </div>
+                        <button onclick="simulateKeyRevocation()" class="clay-button text-err w-full mt-4">Simulate HSM Key Revocation</button>
+                    </div>
+                </div>
+
+                <div class="clay-card">
+                    <h2 class="mb-4">Advanced Encryption</h2>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-maroon">Client-Side Sharding</p>
+                                <p class="text-xs text-gray">Split files across multiple cloud zones</p>
+                            </div>
+                            <button onclick="toggleFeature(this, 'File Sharding')" class="clay-toggle active"><div class="clay-toggle-thumb"></div></button>
+                        </div>
+                        <button onclick="simulateSharding()" class="clay-button w-full mt-4">Simulate File Sharding</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- GOVERNANCE TAB -->
+            <section id="content-governance" class="hidden grid">
+                <div class="clay-card">
+                    <h2 class="mb-4">Data Classification (AI)</h2>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-maroon">Automated Discovery</p>
+                                <p class="text-xs text-gray">Scan uploads for SSNs, CCs, Contracts</p>
+                            </div>
+                            <button onclick="toggleFeature(this, 'AI Classification')" class="clay-toggle active"><div class="clay-toggle-thumb"></div></button>
+                        </div>
+                        <button onclick="simulateClassification()" class="clay-button w-full mt-4 text-warn">Simulate PII Upload</button>
+                    </div>
+                </div>
+
+                <div class="clay-card">
+                    <h2 class="mb-4">Immutable Audit Trails</h2>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-maroon">Blockchain Log Ledger</p>
+                                <p class="text-xs text-gray">Cryptographically hashed append-only logs</p>
+                            </div>
+                            <button onclick="toggleFeature(this, 'Blockchain Logs')" class="clay-toggle active"><div class="clay-toggle-thumb"></div></button>
+                        </div>
+                        <button onclick="simulateAuditVerify()" class="clay-button w-full mt-4">Verify Log Integrity</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- LOGS TAB -->
+            <section id="content-logs" class="hidden grid">
+                <div class="clay-card flex flex-col" style="grid-column: 1 / -1;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2>Immutable Audit Logs</h2>
+                        <span class="text-xs mono text-maroon" style="background: var(--surface-dark); padding: 4px 8px; border-radius: 8px;">Live Stream</span>
+                    </div>
+                    <div id="log-container" class="mono text-sm log-container" style="height: 500px;"></div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="mt-4 text-center text-gray mono text-xs" style="margin-top: 3rem;">
+            TRAFALGAR ENTERPRISE v12.0.0 | MAXIMUM SECURITY POSTURE
+        </footer>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        let users = [
+            { id: 1, name: "Kazuha", role: "Admin", mfa: "FIDO2", status: "Active", pc: "MacBook Pro", cpu: 45, ram: 60, os: "Updated", enc: "FileVault", edr: "Active", isolated: false },
+            { id: 2, name: "Zhongli", role: "HR", mfa: "Authenticator", status: "Active", pc: "Windows Desktop", cpu: 12, ram: 35, os: "Updated", enc: "BitLocker", edr: "Active", isolated: false },
+            { id: 3, name: "Yae Miko", role: "Developer", mfa: "None", status: "Pending", pc: "Windows Laptop", cpu: 88, ram: 92, os: "Outdated", enc: "None", edr: "Missing", isolated: false },
+            { id: 4, name: "Ei", role: "Contractor", mfa: "SMS", status: "Suspended", pc: "Personal PC", cpu: 15, ram: 25, os: "Updated", enc: "BitLocker", edr: "Active", isolated: true }
+        ];
+
+        function switchTab(tabId) {
+            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`content-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            if(tabId === 'dashboard') renderDashboard();
+        }
+
+        function renderDashboard() {
+            let healthyPCs = users.filter(u => u.os === "Updated" && u.enc !== "None" && u.edr === "Active" && !u.isolated).length;
+            let endpointScore = Math.round((healthyPCs / users.length) * 100);
+            document.getElementById('ring-endpoint').innerText = endpointScore + "%";
+            document.getElementById('ring-endpoint').style.color = endpointScore > 80 ? 'var(--maroon)' : 'var(--warn)';
+        }
+
+        function render() {
+            const userList = document.getElementById('user-list');
+            const endpointList = document.getElementById('endpoint-list');
+            userList.innerHTML = "";
+            endpointList.innerHTML = "";
+
+            users.forEach(user => {
+                let statusBadge = user.status === "Active" ? "badge-active" : (user.status === "Pending" ? "badge-warn" : "badge-err");
+                let actionBtn = user.status === "Active" 
+                    ? `<button onclick="offboardUser(${user.id})" class="clay-button text-err">Offboard</button>`
+                    : `<button onclick="onboardUser(${user.id})" class="clay-button text-maroon">Onboard</button>`;
+
+                userList.innerHTML += `
+                    <div class="list-row">
+                        <div>
+                            <p class="font-bold text-maroon">${user.name}</p>
+                            <div class="flex gap-2 items-center mt-2">
+                                <span class="text-xs text-gray mono">Role: ${user.role}</span>
+                                <span class="badge ${statusBadge}">${user.status}</span>
+                                <span class="text-xs text-gray mono">MFA: ${user.mfa}</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            ${user.status === 'Pending' ? `<button onclick="enforceMFA(${user.id})" class="clay-button text-warn">Register FIDO2</button>` : ''}
+                            ${actionBtn}
+                        </div>
+                    </div>
+                `;
+
+                let isHealthy = user.os === "Updated" && user.enc !== "None" && user.edr === "Active" && !user.isolated;
+                let postureBadge = isHealthy ? `<span class="badge badge-active">Trusted</span>` : `<span class="badge badge-err">Non-Compliant</span>`;
+                let cpuColor = user.cpu > 80 ? 'var(--err)' : (user.cpu > 50 ? 'var(--warn)' : 'var(--maroon)');
+
+                endpointList.innerHTML += `
+                    <div class="list-row">
+                        <div style="flex: 1;">
+                            <div class="flex justify-between items-center mb-2">
+                                <div>
+                                    <p class="font-bold text-maroon">${user.pc} (${user.name})</p>
+                                    <div class="flex gap-4 mt-1 mono text-xs text-gray">
+                                        <span>OS: ${user.os}</span>
+                                        <span>Disk: ${user.enc}</span>
+                                        <span>EDR: ${user.edr}</span>
+                                    </div>
+                                </div>
+                                ${postureBadge}
+                            </div>
+                            <div class="flex gap-4 mt-2">
+                                <div style="flex: 1;">
+                                    <p class="text-xs text-gray mono mb-1">CPU: ${user.cpu}%</p>
+                                    <div class="progress-track"><div class="progress-fill" style="width: ${user.cpu}%; background: ${cpuColor};"></div></div>
+                                </div>
+                                <div style="flex: 1;">
+                                    <p class="text-xs text-gray mono mb-1">RAM: ${user.ram}%</p>
+                                    <div class="progress-track"><div class="progress-fill" style="width: ${user.ram}%; background: var(--maroon);"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 items-center" style="margin-left: 1rem;">
+                            ${!isHealthy && !user.isolated ? `<button onclick="remediatePC(${user.id})" class="clay-button text-warn">Fix Posture</button>` : ''}
+                            <button onclick="toggleIsolate(${user.id})" class="clay-button ${user.isolated ? 'text-maroon' : 'text-err'}">
+                                ${user.isolated ? 'Restore' : 'Isolate'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            renderDashboard();
+        }
+
+        function provisionUser() {
+            users.push({ id: users.length + 1, name: "New Hire", role: "Marketing", mfa: "None", status: "Pending", pc: "Unassigned", cpu: 0, ram: 0, os: "Unknown", enc: "Unknown", edr: "Unknown", isolated: false });
+            render();
+            addLog("SCIM: Provisioned new employee. Awaiting MFA.", "text-maroon");
+        }
+        function enforceMFA(id) { users.find(u => u.id === id).mfa = "FIDO2"; render(); addLog("ONBOARDING: Enforced FIDO2.", 'text-maroon'); }
+        function onboardUser(id) { users.find(u => u.id === id).status = "Active"; render(); addLog(`LIFECYCLE: User activated.`, 'text-maroon'); }
+        function offboardUser(id) { const u = users.find(u => u.id === id); u.status = "Suspended"; u.isolated = true; render(); addLog(`OFFBOARDING: Locked out ${u.name}.`, 'text-err'); }
+        function remediatePC(id) { const u = users.find(u => u.id === id); u.os = "Updated"; u.enc = "BitLocker"; u.edr = "Active"; render(); addLog(`REMEDIATION: Patched ${u.pc}.`, 'text-maroon'); }
+        function toggleIsolate(id) {
+            const u = users.find(u => u.id === id);
+            u.isolated = !u.isolated;
+            render();
+            addLog(u.isolated ? `SECURITY: Isolated ${u.pc}!` : `SECURITY: Restored ${u.pc}.`, u.isolated ? 'text-err' : 'text-maroon');
+        }
+
+        // ADVANCED SIMULATIONS
+        function simulateInsiderThreat() {
+            addLog("WARNING: User accessed from high-risk geolocation (Russia).", "text-err");
+            setTimeout(() => addLog("GEOFENCE: Blocked download request. Watermark injected.", "text-maroon"), 1500);
+        }
+
+        function simulateCdrScan() {
+            addLog("CDR: Uploading 'Q3_Financials.pdf' to sandbox...", "text-gray");
+            setTimeout(() => addLog("CDR: Malicious macro detected and stripped. File sanitized.", "text-maroon"), 1500);
+        }
+
+        function simulateCanaryTrigger() {
+            addLog("CRITICAL: Canary file 'Executive_Salaries_2026.xlsx' opened!", "text-err");
+            setTimeout(() => {
+                addLog("SOAR: Playbook triggered. User account locked instantly.", "text-maroon");
+                addLog("SOAR: Active PC isolated from network.", "text-warn");
+            }, 1500);
+        }
+
+        function simulateKeyRevocation() {
+            addLog("HYOK: HSM key 'Client_Key_99' revoked externally.", "text-warn");
+            setTimeout(() => addLog("CRYPTO: Cloud data is now mathematically unreadable (Ciphertext).", "text-maroon"), 1500);
+        }
+
+        function simulateSharding() {
+            addLog("CRYPTO: Splitting file into 5 encrypted shards...", "text-gray");
+            setTimeout(() => addLog("CRYPTO: Scattered shards across AWS, Azure, and GCP.", "text-maroon"), 1500);
+        }
+
+        function simulateClassification() {
+            addLog("AI ENGINE: Scanning upload...", "text-gray");
+            setTimeout(() => addLog("AI ENGINE: Found SSNs and Credit Cards. Tagged as RESTRICTED.", "text-warn"), 1500);
+        }
+
+        function simulateAuditVerify() {
+            addLog("LEDGER: Verifying cryptographic hashes of audit logs...", "text-gray");
+            setTimeout(() => addLog("LEDGER: Integrity Verified. 0 tampered logs.", "text-maroon"), 1500);
+        }
+
+        function toggleFeature(btn, featureName) {
+            btn.classList.toggle('active'); btn.classList.toggle('inactive');
+            addLog(`POLICY: Toggled ${featureName}`, btn.classList.contains('active') ? 'text-maroon' : 'text-warn');
+        }
+
+        function addLog(text, color) {
+            const container = document.getElementById('log-container');
+            const feed = document.getElementById('dashboard-feed');
+            if(!container || !feed) return;
+            
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+            const logHTML = `<div class="log-entry ${color}"><span style="color:#9e8c85">[${time}]</span> ${text}</div>`;
+            
+            container.insertAdjacentHTML('afterbegin', logHTML);
+            if (container.children.length > 50) container.lastChild.remove();
+
+            feed.insertAdjacentHTML('afterbegin', logHTML);
+            if (feed.children.length > 15) feed.lastChild.remove();
+        }
+
+        // --- FIXED TELEMETRY GRAPH JS ---
+        function initTelemetry() {
+            const container = document.getElementById('telemetry-bars');
+            container.innerHTML = ''; // Clear existing
+            
+            // Calculate how many bars can fit based on container width (approx)
+            // This prevents overflow and ensures they fill the space nicely
+            const containerWidth = container.clientWidth || 500;
+            const barWidth = 15; // Approximate width + gap
+            const maxBars = Math.floor(containerWidth / barWidth);
+
+            for(let i = 0; i < maxBars; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'telemetry-bar';
+                bar.style.height = (Math.floor(Math.random() * 70) + 20) + 'px';
+                if(parseInt(bar.style.height) > 70) bar.style.background = 'var(--maroon)';
+                container.appendChild(bar);
+            }
+        }
+
+        // Update the graph dynamically
+        setInterval(() => {
+            // Update User PC stats
+            users.forEach(user => {
+                if(user.cpu > 0) {
+                    user.cpu = Math.max(5, Math.min(99, user.cpu + (Math.floor(Math.random() * 11) - 5)));
+                    user.ram = Math.max(20, Math.min(95, user.ram + (Math.floor(Math.random() * 5) - 2)));
+                }
+            });
+
+            // Update Graph if visible
+            const barsContainer = document.getElementById('telemetry-bars');
+            if(!document.getElementById('content-dashboard').classList.contains('hidden')) {
+                // Shift all bars to the left by removing the first one
+                if(barsContainer.children.length > 0) {
+                    barsContainer.firstChild.remove();
+                }
+                
+                // Add a new bar to the right
+                const height = Math.floor(Math.random() * 80) + 20;
+                const bar = document.createElement('div');
+                bar.className = 'telemetry-bar';
+                bar.style.height = height + "px";
+                if(height > 70) bar.style.background = 'var(--maroon)';
+                barsContainer.appendChild(bar);
+            }
+
+            if(!document.getElementById('content-endpoints').classList.contains('hidden') || !document.getElementById('content-dashboard').classList.contains('hidden')) {
+                render();
+            }
+        }, 2000);
+
+        // Re-initialize graph on window resize to prevent layout breaking
+        window.addEventListener('resize', () => {
+            if(!document.getElementById('content-dashboard').classList.contains('hidden')) {
+                initTelemetry();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTelemetry();
+            render();
+            addLog("SYSTEM: Enterprise Defense Matrix Online.", "text-maroon");
+            addLog("SECURITY: Canary files deployed to shared drives.", "text-warn");
+        });
+    </script>
+</body>
+</html>
